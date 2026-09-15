@@ -1,4 +1,4 @@
-# Tape Processor v1.0
+# Tape Art Template Processor v1.0
 
 A tool for generating posterized layer blueprints for lightbox and polarization tape art.
 
