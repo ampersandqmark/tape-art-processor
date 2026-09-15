@@ -11,7 +11,7 @@ A tool for generating posterized layer blueprints for lightbox and polarization 
 
 ## Requirements
 
-* Python 3.8+
+* Python 3.8-3.12
 * `pygame`
 * `opencv-python`
 * `pillow`
