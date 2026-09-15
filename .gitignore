@@ -3,8 +3,4 @@ __pycache__/
 outputs/
 *.png
 *.jpeg
-converter.py
-gen.py
-main.py
-ui.py
-
+prev_ver/
