@@ -183,7 +183,7 @@ class AppUI:
         self.tick_process = Checkbox(
             20, 450, 30, 30, 
             "CLAHE Processing", 
-            checked=True
+            checked=True,
             action="change_val", 
             font=self.font, 
         )
