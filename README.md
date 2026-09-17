@@ -6,7 +6,7 @@ A tool for generating posterized layer blueprints for lightbox and polarization 
 
 * Grayscale, AutoContrast, and Gaussian blur adjustments
 * [OPTIONAL] CLAHE contrast enhancement for mid-tone detail.
-* Interactive Pygame UI with layer adjustments.
+* Interactive Pygame UI.
 * File loading.
 
 ## Requirements
@@ -23,25 +23,24 @@ A tool for generating posterized layer blueprints for lightbox and polarization 
 
 Clone the repository:
    ```bash
-   git clone [https://github.com/your-username/tape-processor.git](https://github.com/your-username/tape-processor.git)
-   cd tape-processor
+   git clone https://github.com/ampersandqmark/tape-art-processor.git
    ```
-## Install dependencies:
+Install dependencies:
 
 ```bash
 # i recommend using a venv
 pip install -r requirements.txt
 ```
 
-## Usage
+## Usage:
 
 ```bash
 # in the src dir:
 python main.py
 ```
 
-## Transparency and Additional Information
+## Transparency and Additional Information:
 This program is made solely to help me make template layers for my hobby, thus this is mostly vibe coded espeically the frontend.
 
-Rest assured that all file handling is done locally, no data is collected.
+All file handling is done locally, no data is collected.
 
