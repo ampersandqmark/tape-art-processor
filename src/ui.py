@@ -2,6 +2,7 @@ import os
 import pygame
 import threading
 from tkinter import Tk, filedialog
+from PIL import Image
 from processor import ImageProcessor
 
 BG_COLOR = (30, 30, 30)
@@ -163,68 +164,54 @@ class AppUI:
         self.font = pygame.font.SysFont(None, 28)
 
         # Setup UI Elements
-        # ======== Buttons ========
-        # x, y, w, h, label, action, font
         self.btn_import = Button(
-            20, 30, 310, 50, 
-            "Import Image", 
+            20, 30, 310, 50, "Import Image", 
             action="import", 
             font=self.font
         )
-        self.btn_save = Button(
-            20, 720, 310, 50, 
-            "Save Layers", 
-            action="save", 
-            font=self.font
-        )
-
-        # ======== Checkboxes ========
-        # x, y, w, h, label, start_state, action, font
-        self.tick_process = Checkbox(
-            20, 450, 30, 30, 
-            "CLAHE Processing", 
-            checked=True,
-            action="change_val", 
-            font=self.font, 
-        )
-
-        # ======== Sliders ========
-        # x, y, w, h, label, min, max, start, action, font
-        self.slider_blur = Slider(
-            20, 350, 310, 20, 
-            "Gaussian Blur", 
-            0, 32, 0, 
-            action="change_val", 
-            font=self.font
-        )
-        self.slider_clip = Slider(
-            20, 520, 310, 20, 
-            "CLAHE ClipLimit", 
-            1.0, 10.0, 3.0, 
+        self.slider_layer = Slider(
+            20, 130, 310, 20, "Layer Count", 
+            3, 12, 6, v_type = "int", 
             action="change_val", 
             font=self.font
         )
         self.slider_contrast = Slider(
-            20, 250, 310, 20, 
-            "Contrast", 
+            20, 200, 310, 20, "Contrast", 
             0, 50, 0, 
             action="change_val", 
             font=self.font
         )
-        self.slider_grid = Slider(
-            20, 600, 310, 20, 
-            "CLAHE GridSize", 
-            2, 32, 8, 
-            v_type ="int", 
+        self.slider_blur = Slider(
+            20, 270, 310, 20, "Gaussian Blur", 
+            0, 32, 0, 
             action="change_val", 
             font=self.font
         )
-        self.slider_layer = Slider(
-            20, 150, 310, 20, 
-            "Layer Count", 
-            3, 12, 6, 
-            v_type = "int", 
+        self.tick_process = Checkbox(
+            20, 350, 30, 30, "CLAHE Processing", checked=True,
             action="change_val", 
+            font=self.font, 
+        )
+        self.slider_clip = Slider(
+            20, 420, 310, 20, "CLAHE ClipLimit", 
+            1.0, 10.0, 3.0, 
+            action="change_val", 
+            font=self.font
+        )
+        self.slider_grid = Slider(
+            20, 490, 310, 20, "CLAHE GridSize", 
+            2, 32, 8, v_type ="int", 
+            action="change_val", 
+            font=self.font
+        )
+        self.btn_next = Button(
+            20, 560, 310, 50, "Full Preview",
+            action="up_layer",
+            font=self.font
+        )
+        self.btn_save = Button(
+            20, 720, 310, 50, "Save Layers", 
+            action="save", 
             font=self.font
         )
 
@@ -236,6 +223,7 @@ class AppUI:
             self.tick_process,
             self.slider_clip, 
             self.slider_grid, 
+            self.btn_next,
             self.btn_save
         ]
 
@@ -249,6 +237,8 @@ class AppUI:
         self.image_path = None
         self.preview_pil = None # store processed image
         self.layers = []  # Stores PIL images of processed layers in-memory
+        self.current_layer = -1
+        self.showing_layer = False
         
         # Threading State
         self.is_dialog_open = False
@@ -324,6 +314,32 @@ class AppUI:
 
         threading.Thread(target=self._open_file_dialog_thread, daemon=True).start()
 
+    def update_preview_rect(self, img):
+        if not self.preview_pil:
+            return
+        raw_surface = pygame.image.fromstring(
+            img.tobytes(), img.size, img.mode
+        )
+        
+        self.preview_surface = pygame.transform.smoothscale(
+            raw_surface, (self.preview_rect.width, self.preview_rect.height)
+        )
+
+    def change_layer(self, direction):
+        self.showing_layer = True
+        self.current_layer += 1
+        if self.current_layer > len(self.layers) - 1:
+            self.current_layer = -1
+            self.showing_layer = False
+            self.btn_next.text = "Full Preview"
+            self.update_preview_rect(self.preview_pil)
+            return
+
+        # if self.layers:
+        self.btn_next.text = f"Layer {self.current_layer+1} of {len(self.layers)}"
+
+        self.update_preview_rect(self.layers[self.current_layer].convert("RGB"))
+
     def save_layers(self):
         if not self.layers:
             print("No image processed yet. Please import an image first.")
@@ -342,13 +358,13 @@ class AppUI:
         if self._pending_image_data:
             self.preview_pil, self.layers, self.image_path = self._pending_image_data
             
-            raw_surface = pygame.image.fromstring(
-                self.preview_pil.tobytes(), self.preview_pil.size, self.preview_pil.mode
-            )
-            
-            self.preview_surface = pygame.transform.smoothscale(
-                raw_surface, (self.preview_rect.width, self.preview_rect.height)
-            )
+            if self.showing_layer and self.layers:
+                self.current_layer = min(self.current_layer, len(self.layers) - 1)
+            if not self.showing_layer:
+                self.update_preview_rect(self.preview_pil)
+            else:
+                self.update_preview_rect(self.layers[self.current_layer].convert("RGB"))
+
             
             # print("Image successfully loaded into viewport.")
             self._pending_image_data = None
@@ -379,6 +395,8 @@ class AppUI:
                 elif action == "change_val":
                     self.process = self.tick_process.val # check if the val change is process
                     self._pending_image_data = self.pre_process_image(self.image_path)
+                elif action == "up_layer":
+                    self.change_layer(1)
         return True
 
     def render(self):
